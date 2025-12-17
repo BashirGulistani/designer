@@ -3,14 +3,9 @@ main = "src/index.ts"
 compatibility_date = "2025-12-01"
 
 [vars]
-PUBLIC_ASSET_BASE_URL = "https://assets.yourdomain.com" # or R2 public domain
+PUBLIC_ASSET_BASE_URL = "https://pub-90d3eecc36514344b06f04638def005c.r2.dev" 
 ALLOWED_ORIGINS = "https://inkdstores.com,https://www.inkdstores.com,http://localhost:5173"
 
 [[r2_buckets]]
 binding = "DESIGNER_ASSETS"
 bucket_name = "designerassets"
-
-# Optional (recommended)
-[[kv_namespaces]]
-binding = "DESIGNER_JOBS"
-id = "xxxxxx"
