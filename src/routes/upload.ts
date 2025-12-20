@@ -3,7 +3,7 @@ import { json } from "../utils/json";
 import { uuid, isoDateFolder } from "../utils/id";
 import { r2Put, publicUrl } from "../services/r2";
 
-const MAX_BYTES = 15 * 1024 * 1024; // 15MB (tune)
+const MAX_BYTES = 15 * 1024 * 1024; 
 
 export async function upload(req: Request, env: Env) {
   const ct = req.headers.get("Content-Type") || "";
