@@ -21,7 +21,6 @@ Backend API for the Product Configurator. Runs as a Cloudflare Worker with a sim
 - `src/models/types.ts` — shared types, including `Env`
 
 ## Request flow
-
 1. `OPTIONS` → `corsPreflight(req, env)`
 2. Otherwise → `router.handle(req, env, ctx)`
 3. If router returns a `Response`, use it
