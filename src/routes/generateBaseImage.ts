@@ -23,7 +23,7 @@ export async function generateBaseImage(req: Request, env: Env) {
 
   const { bytes, contentType } = await openaiGenerateImage(env, {
     prompt,
-    size: "1536x1024", // landscape tends to look better for product views
+    size: "1536x1024", 
     output_format: "png",
     background: "opaque",
   });
