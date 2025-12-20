@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const UploadQuerySchema = z.object({
-  folder: z.string().optional(), // e.g. "uploads/logos"
+  folder: z.string().optional(), 
 });
 
 export const GenerateBaseImageSchema = z.object({
