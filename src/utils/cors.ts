@@ -32,7 +32,6 @@ export function withCors(res: Response, req: Request, env: Env) {
 }
 
 export function corsPreflight(req: Request, env: Env) {
-  // If you want stricter behavior, you can reject unknown origins here.
   const h = corsHeaders(req, env);
   return new Response(null, { status: 204, headers: h });
 }
