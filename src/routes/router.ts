@@ -12,5 +12,4 @@ router.post("/upload", upload);
 router.post("/generate-base-image", generateBaseImage);
 router.post("/enhance-mockup", enhanceMockup);
 
-// 404 fallback
 router.all("*", () => new Response("Not found", { status: 404 }));
