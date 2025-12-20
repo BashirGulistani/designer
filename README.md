@@ -31,8 +31,4 @@ Backend API for the Product Configurator. Runs as a Cloudflare Worker with a sim
 
 ## Response format
 
-Successful endpoints depend on your routes, but errors follow:
-
-### 404
-```json
-{ "ok": false, "error": "Not found" }
+Successful endpoints depend on routes
