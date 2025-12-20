@@ -9,7 +9,6 @@ function authHeaders(env: Env) {
   };
 }
 
-// Uses Images API generations (returns b64_json for GPT image models) :contentReference[oaicite:1]{index=1}
 export async function openaiGenerateImage(env: Env, args: {
   prompt: string;
   size?: "1024x1024" | "1536x1024" | "1024x1536" | "auto";
@@ -45,14 +44,11 @@ export async function openaiGenerateImage(env: Env, args: {
   return { bytes, contentType: "image/png" };
 }
 
-// Uses Images API edits (multipart). Docs note edits endpoint supports gpt-image-1. :contentReference[oaicite:2]{index=2}
 export async function openaiEditImage(env: Env, args: {
   prompt: string;
   baseImageBytes: Uint8Array;
   baseImageFilename?: string;
   baseImageContentType?: string;
-
-  // overlay as second image
   overlayBytes: Uint8Array;
   overlayFilename?: string;
   overlayContentType?: string;
@@ -78,8 +74,6 @@ export async function openaiEditImage(env: Env, args: {
       type: args.baseImageContentType || "image/png",
     })
   );
-
-  // IMPORTANT: edits supports multiple images; we provide overlay as second input image.
   fd.append(
     "image",
     new File([args.overlayBytes], args.overlayFilename || "overlay.png", {
