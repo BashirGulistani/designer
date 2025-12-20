@@ -15,7 +15,6 @@ export function baseImagePrompt(args: {
     style_hint
   } = args;
 
-  // Vistaprint-like: clean studio shot, no person, consistent lighting.
   return [
     `Create a clean studio product photo for a customizable promotional product.`,
     `Product name: ${product_name}${product_type ? ` (type: ${product_type})` : ""}.`,
