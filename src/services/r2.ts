@@ -15,7 +15,6 @@ export async function r2Put(
 export function publicUrl(env: Env, key: string) {
   const base = (env.PUBLIC_ASSET_BASE_URL || "").replace(/\/+$/, "");
   if (!base) {
-    // You can still return the key, but user won't be able to view it without a public domain
     return `r2://${key}`;
   }
   return `${base}/${key}`;
