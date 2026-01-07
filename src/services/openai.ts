@@ -98,4 +98,61 @@ function withTimeoutSignal(timeoutMs: number): { signal: AbortSignal; cancel: ()
   };
 }
 
+class OpenAIImagesClient {
+  private baseUrl: string;
+  private fetchImpl: FetchLike;
+  private timeoutMs: number;
+  private retries: number;
+  private retryDelayMs: number;
+
+  constructor(private env: Env, opts: ClientOptions = {}) {
+    this.baseUrl = opts.baseUrl ?? OPENAI_BASE_URL;
+    this.fetchImpl = opts.fetchImpl ?? fetch;
+    this.timeoutMs = opts.timeoutMs ?? 60_000;
+    this.retries = opts.retries ?? 2;
+    this.retryDelayMs = opts.retryDelayMs ?? 600;
+  }
+
+  async generate(args: GenerateImageArgs): Promise<ImageBytesResult> {
+    const model = args.model || this.env.OPENAI_IMAGE_MODEL_GENERATE || DEFAULT_GEN_MODEL;
+    const size = sanitizeSize(pickOr(args.size, "1024x1024"));
+    const background = sanitizeBackground(pickOr(args.background, "auto"));
+    const outputFormat = sanitizeFormat(pickOr(args.output_format, "png"));
+
+    const endpoint = "/images/generations";
+    const url = this.baseUrl + endpoint;
+
+    const body = {
+      model,
+      prompt: args.prompt,
+      n: 1,
+      size,
+      background,
+      output_format: outputFormat,
+    };
+
+    const resJson = await this.requestJson<OpenAIImageResponse>(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...buildAuthHeaders(this.env),
+      },
+      body: JSON.stringify(body),
+    });
+
+    const b64 = resJson?.data?.[0]?.b64_json;
+    const b64Safe = ensureOne(b64, "OpenAI generate: missing b64_json");
+
+    return {
+      bytes: decodeBase64ToBytes(b64Safe),
+      contentType: contentTypeFor(outputFormat),
+      meta: {
+        model,
+        size,
+        background,
+        outputFormat,
+        endpoint,
+      },
+    };
+  }
 
