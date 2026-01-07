@@ -156,3 +156,62 @@ class OpenAIImagesClient {
     };
   }
 
+  async edit(args: EditImageArgs): Promise<ImageBytesResult> {
+    const model = args.model || this.env.OPENAI_IMAGE_MODEL_EDIT || DEFAULT_EDIT_MODEL;
+    const size = sanitizeSize(pickOr(args.size, "1024x1024"));
+    const background = sanitizeBackground(pickOr(args.background, "auto"));
+    const outputFormat = sanitizeFormat(pickOr(args.output_format, "png"));
+
+    const endpoint = "/images/edits";
+    const url = this.baseUrl + endpoint;
+
+    const fd = new FormData();
+    fd.append("model", model);
+    fd.append("prompt", args.prompt);
+    fd.append("n", "1");
+    fd.append("size", size);
+    fd.append("background", background);
+    fd.append("output_format", outputFormat);
+
+    fd.append(
+      "image",
+      new File([args.baseImageBytes], args.baseImageFilename ?? "base.png", {
+        type: args.baseImageContentType ?? "image/png",
+      }),
+    );
+    fd.append(
+      "image",
+      new File([args.overlayBytes], args.overlayFilename ?? "overlay.png", {
+        type: args.overlayContentType ?? "image/png",
+      }),
+    );
+
+    const resJson = await this.requestJson<OpenAIImageResponse>(url, {
+      method: "POST",
+      headers: {
+        ...buildAuthHeaders(this.env),
+      },
+      body: fd,
+    });
+
+    const b64 = resJson?.data?.[0]?.b64_json;
+    const b64Safe = ensureOne(b64, "OpenAI edit: missing b64_json");
+
+    return {
+      bytes: decodeBase64ToBytes(b64Safe),
+      contentType: contentTypeFor(outputFormat),
+      meta: {
+        model,
+        size,
+        background,
+        outputFormat,
+        endpoint,
+      },
+    };
+  }
+
+
+
+  
+
+
