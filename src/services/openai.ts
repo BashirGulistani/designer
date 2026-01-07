@@ -20,6 +20,94 @@ export type ImageBytesResult = {
   };
 };
 
+type FetchLike = typeof fetch;
+
+type OpenAIErrorPayload = {
+  error?: {
+    message?: string;
+    type?: string;
+    code?: string | number;
+    param?: string;
+  };
+  [k: string]: unknown;
+};
+
+type OpenAIImageResponse = {
+  data?: Array<{
+    b64_json?: string;
+    revised_prompt?: string;
+  }>;
+  [k: string]: unknown;
+};
+
+type BaseImageInput = {
+  bytes: Uint8Array;
+  filename?: string;
+  contentType?: string;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+type ClientOptions = {
+  baseUrl?: string;
+  fetchImpl?: FetchLike;
+  timeoutMs?: number; 
+  retries?: number; 
+  retryDelayMs?: number; 
+  userAgent?: string;
+};
+
+export type GenerateImageArgs = {
+  prompt: string;
+  size?: ImageSize;
+  model?: string;
+  background?: ImageBackground;
+  output_format?: ImageOutputFormat;
+};
+
+export type EditImageArgs = {
+  prompt: string;
+
+  baseImageBytes: Uint8Array;
+  baseImageFilename?: string;
+  baseImageContentType?: string;
+
+  overlayBytes: Uint8Array;
+  overlayFilename?: string;
+  overlayContentType?: string;
+
+  size?: ImageSize;
+  model?: string;
+  output_format?: ImageOutputFormat;
+  background?: ImageBackground;
+};
+
+function requireEnvKey(env: Env): string {
+  const key = env.OPENAI_API_KEY?.trim();
+  if (!key) throw new Error("Missing OPENAI_API_KEY");
+  return key;
+}
+
+function buildAuthHeaders(env: Env): Record<string, string> {
+  const key = requireEnvKey(env);
+  return { Authorization: `Bearer ${key}` };
+}
+
+
+
+
+
+
+
 
 
 
