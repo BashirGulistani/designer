@@ -210,8 +210,62 @@ class OpenAIImagesClient {
     };
   }
 
+  async editFromInputs(prompt: string, base: BaseImageInput, overlay: BaseImageInput, opts?: Omit<EditImageArgs, keyof EditImageArgs>): Promise<ImageBytesResult> {
+    return this.edit({
+      prompt,
+      baseImageBytes: base.bytes,
+      baseImageFilename: base.filename,
+      baseImageContentType: base.contentType,
+      overlayBytes: overlay.bytes,
+      overlayFilename: overlay.filename,
+      overlayContentType: overlay.contentType,
+    });
+  }
+
+  private async requestJson<T>(url: string, init: RequestInit): Promise<T> {
+    const attempts = Math.max(0, this.retries) + 1;
+
+    for (let i = 0; i < attempts; i++) {
+      const { signal, cancel } = withTimeoutSignal(this.timeoutMs);
+
+      try {
+        const res = await this.fetchImpl(url, { ...init, signal });
+
+        const requestId = getRequestId(res);
+        const payload = (await res.json().catch(() => ({}))) as OpenAIErrorPayload;
+
+        if (!res.ok) {
+          if (i < attempts - 1 && shouldRetry(res.status)) {
+            const jitter = Math.floor(Math.random() * 200);
+            await sleep(this.retryDelayMs * (i + 1) + jitter);
+            continue;
+          }
+
+          const msg = formatOpenAIError(res.status, payload);
+          const withReqId = requestId ? `${msg} (request_id=${requestId})` : msg;
+          throw new Error(withReqId);
+        }
+        return payload as unknown as T;
+      } catch (err: any) {
+        const isAbort = err?.name === "AbortError";
+        const isTypeError = err instanceof TypeError; 
+
+        if (i < attempts - 1 && (isAbort || isTypeError)) {
+          const jitter = Math.floor(Math.random() * 200);
+          await sleep(this.retryDelayMs * (i + 1) + jitter);
+          continue;
+        }
+
+        throw err;
+      } finally {
+        cancel();
+      }
+    }
+    throw new Error("OpenAI request failed after retries");
+  }
+}
 
 
-  
+
 
 
