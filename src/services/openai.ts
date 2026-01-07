@@ -20,96 +20,82 @@ export type ImageBytesResult = {
   };
 };
 
-type FetchLike = typeof fetch;
+function contentTypeFor(format: ImageOutputFormat): string {
+  switch (format) {
+    case "png":
+      return "image/png";
+    case "jpeg":
+      return "image/jpeg";
+    case "webp":
+      return "image/webp";
+    default:
+      return "application/octet-stream";
+  }
+}
 
-type OpenAIErrorPayload = {
-  error?: {
-    message?: string;
-    type?: string;
-    code?: string | number;
-    param?: string;
+function decodeBase64ToBytes(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+function ensureOne<T>(value: T | undefined | null, msg: string): T {
+  if (value == null) throw new Error(msg);
+  return value;
+}
+
+function pickOr<T>(value: T | undefined, fallback: T): T {
+  return value === undefined ? fallback : value;
+}
+
+function sanitizeSize(size: ImageSize): ImageSize {
+  return size;
+}
+
+function sanitizeBackground(bg: ImageBackground): ImageBackground {
+  return bg;
+}
+
+function sanitizeFormat(fmt: ImageOutputFormat): ImageOutputFormat {
+  return fmt;
+}
+
+function getRequestId(res: Response): string | null {
+  return (
+    res.headers.get("x-request-id") ||
+    res.headers.get("request-id") ||
+    res.headers.get("x-openai-request-id") ||
+    null
+  );
+}
+
+function formatOpenAIError(status: number, payload: OpenAIErrorPayload): string {
+  const msg = payload?.error?.message ?? "Unknown error";
+  const code = payload?.error?.code ?? "";
+  const type = payload?.error?.type ?? "";
+  const param = payload?.error?.param ?? "";
+  const details = [type && `type=${type}`, code && `code=${code}`, param && `param=${param}`]
+    .filter(Boolean)
+    .join(" ");
+  return `OpenAI request failed: ${status} ${details ? `(${details})` : ""} ${msg}`.trim();
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function shouldRetry(status: number): boolean {
+  return status === 429 || (status >= 500 && status <= 599);
+}
+
+function withTimeoutSignal(timeoutMs: number): { signal: AbortSignal; cancel: () => void } {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  return {
+    signal: controller.signal,
+    cancel: () => clearTimeout(id),
   };
-  [k: string]: unknown;
-};
-
-type OpenAIImageResponse = {
-  data?: Array<{
-    b64_json?: string;
-    revised_prompt?: string;
-  }>;
-  [k: string]: unknown;
-};
-
-type BaseImageInput = {
-  bytes: Uint8Array;
-  filename?: string;
-  contentType?: string;
-};
-
-
-
-
-
-
-
-
-
-
-
-
-type ClientOptions = {
-  baseUrl?: string;
-  fetchImpl?: FetchLike;
-  timeoutMs?: number; 
-  retries?: number; 
-  retryDelayMs?: number; 
-  userAgent?: string;
-};
-
-export type GenerateImageArgs = {
-  prompt: string;
-  size?: ImageSize;
-  model?: string;
-  background?: ImageBackground;
-  output_format?: ImageOutputFormat;
-};
-
-export type EditImageArgs = {
-  prompt: string;
-
-  baseImageBytes: Uint8Array;
-  baseImageFilename?: string;
-  baseImageContentType?: string;
-
-  overlayBytes: Uint8Array;
-  overlayFilename?: string;
-  overlayContentType?: string;
-
-  size?: ImageSize;
-  model?: string;
-  output_format?: ImageOutputFormat;
-  background?: ImageBackground;
-};
-
-function requireEnvKey(env: Env): string {
-  const key = env.OPENAI_API_KEY?.trim();
-  if (!key) throw new Error("Missing OPENAI_API_KEY");
-  return key;
 }
-
-function buildAuthHeaders(env: Env): Record<string, string> {
-  const key = requireEnvKey(env);
-  return { Authorization: `Bearer ${key}` };
-}
-
-
-
-
-
-
-
-
-
-
 
 
