@@ -266,6 +266,25 @@ class OpenAIImagesClient {
 }
 
 
+export async function openaiGenerateImage(env: Env, args: GenerateImageArgs): Promise<ImageBytesResult> {
+  const client = new OpenAIImagesClient(env);
+  return client.generate(args);
+}
+
+export async function openaiEditImage(env: Env, args: EditImageArgs): Promise<ImageBytesResult> {
+  const client = new OpenAIImagesClient(env);
+  return client.edit(args);
+}
+export function createOpenAIImages(env: Env, opts?: ClientOptions) {
+  const client = new OpenAIImagesClient(env, opts);
+  return {
+    generate: (args: GenerateImageArgs) => client.generate(args),
+    edit: (args: EditImageArgs) => client.edit(args),
+    editFromInputs: (prompt: string, base: BaseImageInput, overlay: BaseImageInput) =>
+      client.editFromInputs(prompt, base, overlay),
+  };
+}
+  
 
 
 
